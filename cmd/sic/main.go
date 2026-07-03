@@ -1,11 +1,13 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log/slog"
 	"os"
 
 	"github.com/wfrs-dev/sic/internal/form"
+	"github.com/wfrs-dev/sic/internal/tui"
 )
 
 const logo = `┌─────────────────────────┐
@@ -31,11 +33,19 @@ func DefaultLogger() *os.File {
 
 var Version = "v.0.0.0-dev"
 
+var nnf = false
+
 func main() {
 	/*
 		f := DefaultLogger()
 		defer f.Close()
 		//*/
+
+	flag.BoolVar(&nnf, "no-nerd-font", false, "Disable nerd font")
+
+	if nnf {
+		tui.DisableNF()
+	}
 
 	fmt.Println(logo)
 	fmt.Println("  Version", Version)
