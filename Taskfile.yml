@@ -1,0 +1,42 @@
+version: '3'
+
+vars:
+  BinName: adm
+  SrcMain: cmd/adm/main.go
+
+tasks:
+  audit:
+    desc: 'Realiza comprobaciones de control de calidad en el código fuente'
+    cmds:
+      - go vet ./...
+      - go test ./...
+      - golangci-lint run ./...
+      - go mod verify
+      - go mod tidy
+  build:
+    deps: [audit]
+    vars:
+      Version:
+        sh: git describe --tags --abbrev=0 || echo 'v0.0.0'
+    cmds:
+      - rm -rf ./dist/{{.GOOS}}-{{.GOARCH}}
+      - mkdir -p ./dist
+      - |
+        go build \
+          -o ./dist/{{.GOOS}}-{{.GOARCH}}/{{.BinName}}{{.Ext}} \
+          -ldflags "-s -w -X main.Version={{.Version}}" \
+          {{.SrcMain}}
+  build-linux:
+    desc: 'Genera el binario ejecutable para Linux'
+    cmds:
+      - task: build
+        vars: {GOOS: linux, GOARCH: amd64, Ext: ""}
+  build-windows:
+    desc: 'Genera el binario ejecutable para Windows'
+    cmds:
+      - task: build
+        vars: {GOOS: windows, GOARCH: amd64, Ext: ".exe"}
+  run:
+    desc: "Ejecuta el programa a traves del comando `go run {{.SrcMain}}`"
+    cmds:
+      - go run {{.SrcMain}}
